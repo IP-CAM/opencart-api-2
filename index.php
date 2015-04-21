@@ -10,12 +10,6 @@ if (file_exists('config.php')) {
 	require_once('config.php');
 }
 
-// Install
-if (!defined('DIR_APPLICATION')) {
-	header('Location: install/index.php');
-	exit;
-}
-
 // Startup
 require_once(DIR_SYSTEM . 'startup.php');
 
@@ -44,17 +38,7 @@ $db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 $registry->set('db', $db);
 
 // Store
-if (isset($_SERVER['HTTPS']) && (($_SERVER['HTTPS'] == 'on') || ($_SERVER['HTTPS'] == '1'))) {
-	$store_query = $db->query("SELECT * FROM " . DB_PREFIX . "store WHERE REPLACE(`ssl`, 'www.', '') = '" . $db->escape('https://' . str_replace('www.', '', $_SERVER['HTTP_HOST']) . rtrim(dirname($_SERVER['PHP_SELF']), '/.\\') . '/') . "'");
-} else {
-	$store_query = $db->query("SELECT * FROM " . DB_PREFIX . "store WHERE REPLACE(`url`, 'www.', '') = '" . $db->escape('http://' . str_replace('www.', '', $_SERVER['HTTP_HOST']) . rtrim(dirname($_SERVER['PHP_SELF']), '/.\\') . '/') . "'");
-}
-
-if ($store_query->num_rows) {
-	$config->set('config_store_id', $store_query->row['store_id']);
-} else {
-	$config->set('config_store_id', 0);
-}
+$config->set('config_store_id', 0); // TODO в случае нескольких магазинов - прописать их ID сюда
 
 // Settings
 $query = $db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE store_id = '0' OR store_id = '" . (int)$config->get('config_store_id') . "' ORDER BY store_id ASC");
@@ -67,10 +51,8 @@ foreach ($query->rows as $setting) {
 	}
 }
 
-if (!$store_query->num_rows) {
-	$config->set('config_url', HTTP_SERVER);
-	$config->set('config_ssl', HTTPS_SERVER);
-}
+$config->set('config_url', HTTP_SERVER);
+$config->set('config_ssl', HTTPS_SERVER);
 
 //Unlimited colors theme
 $theme = $config->get( $config->get( 'config_template') . '_skin'  );
@@ -254,4 +236,3 @@ $controller->dispatch($action, new Action('error/not_found'));
 
 // Output
 $response->output();
-?>
