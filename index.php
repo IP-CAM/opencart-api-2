@@ -116,8 +116,6 @@ $registry->set('request', $request);
 
 // Response
 $response = new Response();
-$response->addHeader('Content-Type: text/html; charset=utf-8');
-$response->setCompression($config->get('config_compression'));
 $registry->set('response', $response);
 
 // Cache
@@ -169,10 +167,6 @@ if (!isset($session->data['language']) || $session->data['language'] != $code) {
 	$session->data['language'] = $code;
 }
 
-if (!isset($request->cookie['language']) || $request->cookie['language'] != $code) {
-	setcookie('language', $code, time() + 60 * 60 * 24 * 30, '/', $request->server['HTTP_HOST']);
-}
-
 $config->set('config_language_id', $languages[$code]['language_id']);
 $config->set('config_language', $languages[$code]['code']);
 
@@ -189,10 +183,6 @@ $registry->set('customer', new Customer($registry));
 
 // Affiliate
 $registry->set('affiliate', new Affiliate($registry));
-
-if (isset($request->get['tracking'])) {
-	setcookie('tracking', $request->get['tracking'], time() + 3600 * 24 * 1000, '/');
-}
 
 // Currency
 $registry->set('currency', new Currency($registry));
@@ -218,21 +208,9 @@ $registry->set('encryption', new Encryption($config->get('config_encryption')));
 // Front Controller
 $controller = new Front($registry);
 
-// Maintenance Mode
-$controller->addPreAction(new Action('common/maintenance'));
-
-// SEO URL's
-$controller->addPreAction(new Action('common/seo_url'));
-
 // Router
-if (isset($request->get['route'])) {
-	$action = new Action($request->get['route']);
-} else {
-	$action = new Action('common/home');
-}
+$action = new Action('common/home');
 
 // Dispatch
 $controller->dispatch($action, new Action('error/not_found'));
 
-// Output
-$response->output();
