@@ -6,16 +6,16 @@
 
 ## Суть проделанной работы
 
-Копирование /index.php в отдельный каталог вне дерева web-документов, удаление лишнего ($_SERVER, COOKIES, etc)
-и смена рабочего каталога (chdir('/var/www/site/public_html/').
+Копирование `index.php` и `admin/index.php` в отдельный каталог вне дерева web-документов, удаление лишнего ($_SERVER, COOKIES, etc)
+и смена рабочего каталога `(chdir('/absolute/path/to/site')`.
 
-Объект OCApi возвращает необходимые объекты для работы с ними в контексте своего не-opencart приложения.
+Объекты `OCAdminApi` (админка) и `OCSiteApi` (сайт) возвращают необходимые объекты для работы с ними в контексте своего не-opencart приложения.
 
 ## Установка
 
 Вся конфигурация автоматически подцепляется из каталога сайта, который следует указать.
 
-* Скопировать `config.distr.json` в `config.json`
+* Скопировать `etc/config.distr.json` в `etc/config.json`
 * Отредактировать `config.json`
 
 В случае нескольких магазинов - отредактировать выбор в коде `index.php`:
@@ -26,10 +26,45 @@ $config->set('config_store_id', 0);
 
 ## API
 
-Пример создания и вызова:
+### Site
+
+Пример создания и вызова для получения категории 30:
 
 ```
-$api = new OCApi();
-$category = $api->getCategory();
-$category->doSomeThing();
+$modelCatalogCategory = $api->getCategory();
+$category = $modelCatalogCategory->getCategory(30);
+die(var_dump($category));
 ```
+
+### Admin
+
+Пример добавления новой категории:
+```
+$modelCatalogCategory = $api->getCategory();
+
+$data = array(
+  'parent_id' => 0, // top level [common]
+  'top' => 1, // show in menu
+  'column' => 3, // count of columns [common]
+  'sort_order' => 0, // order [common]
+  'status' => 1, // active [common]
+  'keyword' => 'keyword', // alias [common]
+  'image' => null, // image
+  'category_description' => array( // category description for each language [common]
+    1 => array('name' => 'sample name', 'meta_keyword' => 'meta keywords',
+      'meta_description' => 'meta description', 'description' => 'description'), // en
+    2 => array('name' => 'sample name ru', 'meta_keyword' => 'meta keywords',
+      'meta_description' => 'meta description', 'description' => 'description') // ru
+  ),
+  'category_store' => array(0), // store ids
+  // category_filter => array($id1, $id2, $id3), [not usually]
+  // category_layout => array($store_id_1 => $layout_1, $store_id_2 => $layout_2), [not usually]
+);
+
+$modelCatalogCategory->addCategory($data);
+```
+
+* `common` - обязательные поля, требуются при вызове
+* `not usually` - поля, обычно не заполняемые
+* остальные поля желательно, но не обязательно заполнять
+* 1 - английский язык, 2 - русский (фактические номера могут отличаться - смотри админку)

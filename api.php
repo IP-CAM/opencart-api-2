@@ -1,10 +1,10 @@
 <?php
 
-class OCApi {
+abstract class OCApi {
 
-  private $config;
+  protected $config;
   public function __construct() {
-    $configFileName = __DIR__ . '/config.json';
+    $configFileName = __DIR__ . '/etc/config.json';
 
     if(!file_exists($configFileName)) throw new Exception("Error loading config $configFileName");
     $this->config = json_decode(file_get_contents($configFileName));
@@ -13,26 +13,12 @@ class OCApi {
     $this->config->apiDir = __DIR__;
   }
 
+  public function __set($name, $val) {
+    $this->config->opencart->{$name} = $val;
+  }
+
   public function getConfig() {
     return $this->config;
   }
 
-  // returns ModelCatalogCategory
-  public function getCategory() {
-    $modelCatalogCategory = new ModelCatalogCategory($this->config->opencart->registry);
-    return $modelCatalogCategory;
-  }
-
-  public function __set($name, $val) {
-    $this->config->opencart->$name = $val;
-  }
 }
-
-$api = new OCApi();
-$config = $api->getConfig();
-
-if(!chdir($config->opencart->realpath)) throw new Exception("Can not change directory to {$this->config->opencart->realpath}");
-require($config->apiDir . '/index.php');
-
-$api->registry = $registry;
-die(var_dump($api->getCategory()));
