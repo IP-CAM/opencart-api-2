@@ -20,9 +20,3 @@ if(!chdir($config->opencart->realpath)) throw new Exception("Can not change dire
 require($config->apiDir . '/opencart/index-site.php');
 
 $api->registry = $registry;
-
-// Ok, now you have access...
-
-$modelCatalogCategory = $api->getCategory();
-$category = $modelCatalogCategory->getCategory(30);
-die(var_dump($category));
